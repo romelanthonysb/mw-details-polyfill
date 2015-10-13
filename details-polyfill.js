@@ -8,12 +8,13 @@
 // 2. The content of <details> outside <summary> are enclosed in HTML tags--
 //    not plain text.
 // 3. Uses "+" and "-" instead of the triangular arrows I saw in Chrome.
-// 4. Logic is backwards of actual HTML5: Attribute 'det-poly-closed' is 
-//    set if details are hidden and removed if details are shown. Contrast
-//    with <details open> if shown and <details> (attribute removed) if
-//    hidden.
 // 
 // Tested on Microsoft Edge (12) and Google Chrome.
+//
+// 2015-10-14
+// Try to use the "open" attribute instead of "det-poly-closed".
+// This means some <details> tags should be left open (displayed) when
+// the program starts up.
 
 $(function() {
   // Check if browser supports <details> tags
@@ -34,32 +35,39 @@ $(function() {
     // Get the older browser to treat these as block elements
     $dets.css('display', 'block');
     $sums.css('display', 'block');
-    // Add the "open" attribute to each detail and set it to false
-    $dets.attr('det-poly-closed', 'det-poly-closed');
-    // then actually hide the details
-    // Just using $dets.hide() will hide the summary, too!
-    $sums.each(function() {
-      $(this).nextAll().wrapAll('<div class="det-poly-rest"></div>');
+    // For each detail block, check to see if it is "open"
+    // If not, hide it
+    $dets.each(function() {
+      $(this).children('summary').nextAll().wrapAll('<div class="det-poly-rest"></div>');
+      if (!($(this).attr('open'))) {
+        $(this).children('.det-poly-rest').hide();
+      }
     });
-    $('.det-poly-rest').hide();
-
-    // Add a "+" (closed) indicator to the beginning of the summary.
+    // Add the correct indicator to the beginning of the summary.
     $sums.prepend('<span class="det-poly-pm"></span>');
-    $('.det-poly-pm').text(' + ');
+    $sums.each(function() {
+      if (!($(this).parent().attr('open'))) {
+        $(this).children('.det-poly-pm').text(' + ');
+      } else {
+        $(this).children('.det-poly-pm').text(' - ');
+      }
+    });
+//    $('.det-poly-pm').text(' + ');
 
     // Toggle the details when the user clicks the summary
     // Code may fail if we have details inside of other details
     $sums.click(function() {
-      if ($(this).parent().attr('det-poly-closed')) {
+      // Is the detail not "open"?
+      if (!$(this).parent().attr('open')) {
         // If closed, open it!
         $(this).parent().find('.det-poly-rest').show();
         $(this).find('.det-poly-pm').text(' - ');
-        $(this).parent().removeAttr('det-poly-closed');
+        $(this).parent().attr('open', 'open');
       } else {
         // If opened, close it!
         $(this).parent().find('.det-poly-rest').hide();
         $(this).find('.det-poly-pm').text(' + ');
-        $(this).parent().attr('det-poly-closed', 'det-poly-closed');
+        $(this).parent().removeAttr('open');
       }
     });
   }
